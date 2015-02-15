@@ -28,15 +28,17 @@ import java.util.ArrayList;
 
 public class SearchActivity extends Activity {
 
+    public static final int FILTER_RESULT_CODE = 123;
+    private static String IMAGE_SIZE_PARAM = "&imgsz=";
+    private static String IMAGE_TYPE_PARAM = "&imgtype=";
+    private static String IMAGE_COLOR_PARAM = "&imgcolor=";
+    private static String IMAGE_SITE_PARAM = "&as_sitesearch=";
+
     private EditText etQuery;
     private GridView gvResults;
     private ArrayList<ImageResult> imageResults;
     private ImageResultsAdapter imageResultsAdapter;
-    public static final int FILTER_RESULT_CODE = 123;
     private FilterSet filterSet;
-    private static String imageSizeParam = "&imgsz=";
-    private static String imageTypeParam = "&imgtype=";
-    private static String imageColorParam = "&imgcolor=";
 
 
     @Override
@@ -70,13 +72,16 @@ public class SearchActivity extends Activity {
 //        https://ajax.googleapis.com/ajax/services/search/images?q=fuzzy%20monkey&v=1.0
         String searchUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query;
         if (!(filterSet.getSizeFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(imageSizeParam + filterSet.getSizeFilter());
+            searchUrl = searchUrl.concat(IMAGE_SIZE_PARAM + filterSet.getSizeFilter());
         }
         if (!(filterSet.getColorFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(imageColorParam + filterSet.getColorFilter());
+            searchUrl = searchUrl.concat(IMAGE_COLOR_PARAM + filterSet.getColorFilter());
         }
         if (!(filterSet.getTypeFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(imageTypeParam + filterSet.getTypeFilter());
+            searchUrl = searchUrl.concat(IMAGE_TYPE_PARAM + filterSet.getTypeFilter());
+        }
+        if (!(filterSet.getSiteFilter().equals(""))) {
+            searchUrl = searchUrl.concat(IMAGE_SITE_PARAM + filterSet.getSiteFilter());
         }
         Log.i("INFO", "searchUrl is "+searchUrl );
 
@@ -90,7 +95,10 @@ public class SearchActivity extends Activity {
                     imageResultsJson = response.getJSONObject("responseData").getJSONArray("results");
                     imageResults.clear();
                     imageResultsAdapter.addAll(ImageResult.fromJsonArray(imageResultsJson));
-
+                    if (imageResultsAdapter.isEmpty()) {
+                        findViewById(R.id.no_results).setVisibility(View.VISIBLE);
+                        gvResults.setVisibility(View.GONE);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

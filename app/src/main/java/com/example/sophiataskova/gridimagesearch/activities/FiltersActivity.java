@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.example.sophiataskova.gridimagesearch.R;
@@ -17,17 +18,16 @@ import com.example.sophiataskova.gridimagesearch.models.FilterSet;
 
 public class FiltersActivity extends Activity implements AdapterView.OnItemSelectedListener {
 
-//    public static Size sizeFilter;
-//    public static Type typeFilter;
-//    public static Color colorFilter;
-    public static String sizeFilter;
-    public static String typeFilter;
-    public static String colorFilter;
+    private static String sizeFilter;
+    private static String typeFilter;
+    private static String colorFilter;
+    private static String siteFilter;
     private FilterSet filterSet;
     private Spinner sizeSpinner;
     private Spinner typeSpinner;
     private Spinner colorSpinner;
     private Button saveButton;
+    private EditText etSiteFilter;
 
     public enum Size {
         NONE, SMALL, MEDIUM, LARGE, EXTRA_LARGE
@@ -47,11 +47,12 @@ public class FiltersActivity extends Activity implements AdapterView.OnItemSelec
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filters);
-        filterSet = new FilterSet(sizeFilter, typeFilter, colorFilter);
+        filterSet = new FilterSet(sizeFilter, typeFilter, colorFilter, siteFilter);
 
         initializeSpinner(sizeSpinner, R.id.size_spinner, R.array.sizes_array);
         initializeSpinner(typeSpinner, R.id.color_spinner, R.array.colors_array);
         initializeSpinner(colorSpinner, R.id.type_spinner, R.array.types_array);
+        etSiteFilter = (EditText)findViewById(R.id.site_et);
         initializeSaveButton();
     }
 
@@ -60,6 +61,7 @@ public class FiltersActivity extends Activity implements AdapterView.OnItemSelec
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                filterSet.setSiteFilter(etSiteFilter.getText().toString());
                 Intent i = new Intent();
                 i.putExtra("result", filterSet);
                 setResult(RESULT_OK, i);

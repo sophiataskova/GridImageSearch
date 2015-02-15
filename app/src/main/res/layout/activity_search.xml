@@ -33,6 +33,15 @@
         android:layout_alignParentLeft="true"
         android:numColumns="3"
         android:layout_below="@+id/etQuery"></GridView>
+    <TextView
+        android:id="@+id/no_results"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Sorry, no images matched this search"
+        android:layout_below="@+id/etQuery"
+        android:gravity="center"
+        android:visibility="gone"
+        />
 
 
 </RelativeLayout>
