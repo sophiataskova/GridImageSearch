@@ -13,6 +13,7 @@ import android.widget.GridView;
 
 import com.example.sophiataskova.gridimagesearch.R;
 import com.example.sophiataskova.gridimagesearch.adapters.ImageResultsAdapter;
+import com.example.sophiataskova.gridimagesearch.models.EndlessScrollListener;
 import com.example.sophiataskova.gridimagesearch.models.FilterSet;
 import com.example.sophiataskova.gridimagesearch.models.ImageResult;
 import com.loopj.android.http.AsyncHttpClient;
@@ -33,12 +34,16 @@ public class SearchActivity extends Activity {
     private static String IMAGE_TYPE_PARAM = "&imgtype=";
     private static String IMAGE_COLOR_PARAM = "&imgcolor=";
     private static String IMAGE_SITE_PARAM = "&as_sitesearch=";
+    private static String OFFSET = "&start=";
 
     private EditText etQuery;
     private GridView gvResults;
     private ArrayList<ImageResult> imageResults;
     private ImageResultsAdapter imageResultsAdapter;
     private FilterSet filterSet;
+    private static String mUrl;
+    private static String mPaginatedUrl;
+    private int mOffset;
 
 
     @Override
@@ -55,6 +60,15 @@ public class SearchActivity extends Activity {
     private void setUpViews() {
         etQuery = (EditText) findViewById(R.id.etQuery);
         gvResults = (GridView) findViewById(R.id.gvResults);
+        gvResults.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to your AdapterView
+                customLoadMoreDataFromApi(page);
+                // or customLoadMoreDataFromApi(totalItemsCount);
+            }
+        });
         gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -66,38 +80,60 @@ public class SearchActivity extends Activity {
         });
     }
 
+    public void customLoadMoreDataFromApi(int offset) {
+        mOffset = mOffset + 8;
+        makeRequest(mOffset);
+        // This method probably sends out a network request and appends new data items to your adapter.
+        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
+        // Deserialize API response and then construct new objects to append to the adapter
+    }
+
     public void onImageSearch(View v) {
         String query = etQuery.getText().toString();
-        AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-//        https://ajax.googleapis.com/ajax/services/search/images?q=fuzzy%20monkey&v=1.0
-        String searchUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query;
-        if (!(filterSet.getSizeFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(IMAGE_SIZE_PARAM + filterSet.getSizeFilter());
-        }
-        if (!(filterSet.getColorFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(IMAGE_COLOR_PARAM + filterSet.getColorFilter());
-        }
-        if (!(filterSet.getTypeFilter().equals("none"))) {
-            searchUrl = searchUrl.concat(IMAGE_TYPE_PARAM + filterSet.getTypeFilter());
-        }
-        if (!(filterSet.getSiteFilter().equals(""))) {
-            searchUrl = searchUrl.concat(IMAGE_SITE_PARAM + filterSet.getSiteFilter());
-        }
-        Log.i("INFO", "searchUrl is "+searchUrl );
 
-//        String searchUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query + "&rsz=8";
-        asyncHttpClient.get(searchUrl, new JsonHttpResponseHandler() {
+//        https://ajax.googleapis.com/ajax/services/search/images?q=fuzzy%20monkey&v=1.0
+        mUrl = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + query + "&rsz=8";
+        if (filterSet != null) {
+            if (!(filterSet.getSizeFilter().equals("none"))) {
+                mUrl = mUrl.concat(IMAGE_SIZE_PARAM + filterSet.getSizeFilter());
+            }
+            if (!(filterSet.getColorFilter().equals("none"))) {
+                mUrl = mUrl.concat(IMAGE_COLOR_PARAM + filterSet.getColorFilter());
+            }
+            if (!(filterSet.getTypeFilter().equals("none"))) {
+                mUrl = mUrl.concat(IMAGE_TYPE_PARAM + filterSet.getTypeFilter());
+            }
+            if (!(filterSet.getSiteFilter().equals(""))) {
+                mUrl = mUrl.concat(IMAGE_SITE_PARAM + filterSet.getSiteFilter());
+            }
+        }
+        Log.i("INFO", "searchUrl is " + mUrl);
+
+        makeRequest(0);
+    }
+
+    private void makeRequest(final int offset) {
+        mOffset = offset;
+        mPaginatedUrl = mUrl.concat(OFFSET + mOffset);
+        Log.i("INFO", "searchUrl is " + mPaginatedUrl);
+        AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+        asyncHttpClient.get(mPaginatedUrl, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 Log.d("DEBUG", response.toString());
                 JSONArray imageResultsJson = null;
                 try {
                     imageResultsJson = response.getJSONObject("responseData").getJSONArray("results");
-                    imageResults.clear();
+                    if (mOffset == 0) {
+                        imageResults.clear();
+                    }
                     imageResultsAdapter.addAll(ImageResult.fromJsonArray(imageResultsJson));
                     if (imageResultsAdapter.isEmpty()) {
                         findViewById(R.id.no_results).setVisibility(View.VISIBLE);
                         gvResults.setVisibility(View.GONE);
+                    } else {
+                        findViewById(R.id.no_results).setVisibility(View.GONE);
+                        gvResults.setVisibility(View.VISIBLE);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
