@@ -14,6 +14,32 @@
     <string name="color_filter">Color Filter</string>
     <string name="image_type">Image Type</string>
     <string name="site_filter">Site Filter</string>
-
-
+    <string name="_save">Save</string>
+    <string-array name="sizes_array">
+        <item>none</item>
+        <item>small</item>
+        <item>medium</item>
+        <item>large</item>
+        <item>extra-large</item>
+    </string-array>
+    <string-array name="colors_array">
+        <item>none</item>
+        <item>black</item>
+        <item>blue</item>
+        <item>red</item>
+        <item>green</item>
+        <item>yellow</item>
+        <item>brown</item>
+        <item>orange</item>
+        <item>pink</item>
+        <item>white</item>
+        <item>grey</item>
+    </string-array>
+    <string-array name="types_array">
+        <item>none</item>
+        <item>faces</item>
+        <item>photo</item>
+        <item>clip art</item>
+        <item>line art</item>
+    </string-array>
 </resources>
