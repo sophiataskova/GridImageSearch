@@ -1,7 +1,10 @@
 package com.example.sophiataskova.gridimagesearch.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -9,7 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.GridView;
+import android.widget.Toast;
 
 import com.example.sophiataskova.gridimagesearch.R;
 import com.example.sophiataskova.gridimagesearch.adapters.ImageResultsAdapter;
@@ -37,7 +40,7 @@ public class SearchActivity extends Activity {
     private static String OFFSET = "&start=";
 
     private EditText etQuery;
-    private GridView gvResults;
+    private com.etsy.android.grid.StaggeredGridView gvResults;
     private ArrayList<ImageResult> imageResults;
     private ImageResultsAdapter imageResultsAdapter;
     private FilterSet filterSet;
@@ -59,7 +62,7 @@ public class SearchActivity extends Activity {
 
     private void setUpViews() {
         etQuery = (EditText) findViewById(R.id.etQuery);
-        gvResults = (GridView) findViewById(R.id.gvResults);
+        gvResults = (com.etsy.android.grid.StaggeredGridView) findViewById(R.id.gvResults);
         gvResults.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
@@ -112,35 +115,49 @@ public class SearchActivity extends Activity {
         makeRequest(0);
     }
 
+    private Boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
     private void makeRequest(final int offset) {
         mOffset = offset;
         mPaginatedUrl = mUrl.concat(OFFSET + mOffset);
         Log.i("INFO", "searchUrl is " + mPaginatedUrl);
         AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-        asyncHttpClient.get(mPaginatedUrl, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                Log.d("DEBUG", response.toString());
-                JSONArray imageResultsJson = null;
-                try {
-                    imageResultsJson = response.getJSONObject("responseData").getJSONArray("results");
-                    if (mOffset == 0) {
-                        imageResults.clear();
+        if (isNetworkAvailable()){
+
+            asyncHttpClient.get(mPaginatedUrl, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    Log.d("DEBUG", response.toString());
+                    JSONArray imageResultsJson = null;
+                    try {
+                        imageResultsJson = response.getJSONObject("responseData").getJSONArray("results");
+                        if (mOffset == 0) {
+                            imageResults.clear();
+                        }
+                        imageResultsAdapter.addAll(ImageResult.fromJsonArray(imageResultsJson));
+                        if (imageResultsAdapter.isEmpty()) {
+                            findViewById(R.id.no_results).setVisibility(View.VISIBLE);
+                            gvResults.setVisibility(View.GONE);
+                        } else {
+                            findViewById(R.id.no_results).setVisibility(View.GONE);
+                            gvResults.setVisibility(View.VISIBLE);
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(SearchActivity.this, "Network problem with fetching the data", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
-                    imageResultsAdapter.addAll(ImageResult.fromJsonArray(imageResultsJson));
-                    if (imageResultsAdapter.isEmpty()) {
-                        findViewById(R.id.no_results).setVisibility(View.VISIBLE);
-                        gvResults.setVisibility(View.GONE);
-                    } else {
-                        findViewById(R.id.no_results).setVisibility(View.GONE);
-                        gvResults.setVisibility(View.VISIBLE);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.i("INFO", imageResults.toString());
                 }
-                Log.i("INFO", imageResults.toString());
-            }
-        });
+            });
+    }
+        else {
+            Toast.makeText(this, "No network connectivity", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -155,6 +172,7 @@ public class SearchActivity extends Activity {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, FiltersActivity.class);
+            intent.putExtra("result", filterSet);
             startActivityForResult(intent, FILTER_RESULT_CODE);
             return true;
         }

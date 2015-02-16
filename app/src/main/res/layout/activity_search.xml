@@ -24,7 +24,7 @@
         android:onClick="onImageSearch"
         android:layout_alignParentRight="true"
         android:text="@string/search_label"></Button>
-    <GridView
+    <com.etsy.android.grid.StaggeredGridView
         android:id="@+id/gvResults"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,7 +32,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:numColumns="3"
-        android:layout_below="@+id/etQuery"></GridView>
+        android:layout_below="@+id/etQuery"/>
     <TextView
         android:id="@+id/no_results"
         android:layout_width="match_parent"

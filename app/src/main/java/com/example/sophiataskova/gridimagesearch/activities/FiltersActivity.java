@@ -28,18 +28,9 @@ public class FiltersActivity extends Activity implements AdapterView.OnItemSelec
     private Spinner colorSpinner;
     private Button saveButton;
     private EditText etSiteFilter;
-
-    public enum Size {
-        NONE, SMALL, MEDIUM, LARGE, EXTRA_LARGE
-    }
-
-    public enum Type {
-        NONE, FACES, PHOTO, CLIP_ART, LINE_ART
-    }
-
-    public enum Color {
-        NONE, BLACK, BLUE, RED, GREEN, YELLOW, BROWN, ORANGE, PINK, WHITE, GREY
-    }
+    private ArrayAdapter<CharSequence> sizeAdapter;
+    private ArrayAdapter<CharSequence> colorAdapter;
+    private ArrayAdapter<CharSequence> typeAdapter;
 
 
     @Override
@@ -47,13 +38,55 @@ public class FiltersActivity extends Activity implements AdapterView.OnItemSelec
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filters);
-        filterSet = new FilterSet(sizeFilter, typeFilter, colorFilter, siteFilter);
+        if (getIntent().getParcelableExtra("result") == null) {
+            filterSet = new FilterSet(sizeFilter, typeFilter, colorFilter, siteFilter);
+        } else {
+            filterSet = getIntent().getParcelableExtra("result");
+        }
 
-        initializeSpinner(sizeSpinner, R.id.size_spinner, R.array.sizes_array);
-        initializeSpinner(typeSpinner, R.id.color_spinner, R.array.colors_array);
-        initializeSpinner(colorSpinner, R.id.type_spinner, R.array.types_array);
-        etSiteFilter = (EditText)findViewById(R.id.site_et);
+        initializeFilters();
         initializeSaveButton();
+    }
+
+    private void initializeFilters() {
+        etSiteFilter = (EditText) findViewById(R.id.site_et);
+
+        sizeSpinner = (Spinner) findViewById(R.id.size_spinner);
+        colorSpinner = (Spinner) findViewById(R.id.color_spinner);
+        typeSpinner = (Spinner) findViewById(R.id.type_spinner);
+
+        sizeAdapter = ArrayAdapter.createFromResource(this,
+                R.array.sizes_array, android.R.layout.simple_spinner_item);
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sizeSpinner.setAdapter(sizeAdapter);
+
+        typeAdapter = ArrayAdapter.createFromResource(this,
+                R.array.types_array, android.R.layout.simple_spinner_item);
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        typeSpinner.setAdapter(typeAdapter);
+
+        colorAdapter = ArrayAdapter.createFromResource(this,
+                R.array.colors_array, android.R.layout.simple_spinner_item);
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        colorSpinner.setAdapter(colorAdapter);
+
+        if (filterSet != null) {
+            if (filterSet.getSiteFilter() != "") {
+                etSiteFilter.setText(filterSet.getSiteFilter());
+            }
+            if (filterSet.getSizeFilter() != null) {
+                setSpinnerState(sizeAdapter, sizeSpinner, filterSet.getSizeFilter());
+            }
+            if (filterSet.getTypeFilter() != null) {
+                setSpinnerState(typeAdapter, typeSpinner, filterSet.getTypeFilter());
+            }
+            if (filterSet.getColorFilter() != null) {
+                setSpinnerState(colorAdapter, colorSpinner, filterSet.getColorFilter());
+            }
+        }
+        sizeSpinner.setOnItemSelectedListener(this);
+        colorSpinner.setOnItemSelectedListener(this);
+        typeSpinner.setOnItemSelectedListener(this);
     }
 
     private void initializeSaveButton() {
@@ -70,13 +103,11 @@ public class FiltersActivity extends Activity implements AdapterView.OnItemSelec
         });
     }
 
-    private void initializeSpinner(Spinner spinner, int spinnerId, int optionsArrayId) {
-        spinner = (Spinner) findViewById(spinnerId);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                optionsArrayId, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
+    private void setSpinnerState(ArrayAdapter<CharSequence> arrayAdapter, Spinner spinner, String value) {
+        if (!value.equals(null)) {
+            int spinnerPostion = arrayAdapter.getPosition(value);
+            spinner.setSelection(spinnerPostion);
+        }
     }
 
 
