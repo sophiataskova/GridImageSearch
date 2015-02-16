@@ -18,6 +18,4 @@ An app for searching for images on google, with a few filter options
 
 This took about 8 hours to write. 
 
-See gif walkthrough at ![Video Walkthrough](https://s3.amazonaws.com/uploads.hipchat.com/20599/752135/4hUD1ilHtxuSTGS/image_search_demo.gif)
-
-Gif of behavior when all results are filtered out: ![Video Walkthrough 2](https://s3.amazonaws.com/uploads.hipchat.com/20599/752135/FJ15wPieVgrTmdL/image_search_demo_no_results.gif)
+See gif walkthrough at ![Video Walkthrough](https://s3.amazonaws.com/uploads.hipchat.com/20599/752135/D7INJs4eLkjCf5Q/image_search_demo_1.gif)
